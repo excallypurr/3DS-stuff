@@ -1,4 +1,8 @@
 @echo off
+
+REM Edited by Excallypurr
+REM Last Edit: 11/15/20 3:24PM MST
+
 mode con cols=100 lines=26
 title Batch CIA 3DS Decryptor
 SetLocal EnableDelayedExpansion
