@@ -1,12 +1,45 @@
 @echo off
-mode con cols=52 lines=26
+mode con cols=100 lines=26
 title Batch CIA 3DS Decryptor
 SetLocal EnableDelayedExpansion
+set count=0
 echo %date% %time% >log.txt 2>&1
-echo Decrypting...
+:SetEncrypt
+if not exist locations.txt (
+	set "EncryptLocation="
+	set /p EncryptLocation="Where are the .3DS/.cia files located: "
+	if exist "!EncryptLocation!" (
+		call :SlashChecker !EncryptLocation! encrypted
+	) else ( 
+		call :NotExist Encrypt "!EncryptLocation!"
+	)
+	echo.
+	:SetDecrypt
+	set "DecryptLocation="
+	echo Where do you want the decrypted files to be stored? 
+	set /p DecryptLocation="Leave blank for the same directory as the original files: "
+	if exist "!DecryptLocation!" (
+		call :SlashChecker !DecryptLocation! decrypted
+	) else ( 
+		call :NotExist Decrypt "!DecryptLocation!"
+	)
+)
+:ScanLocations
+for /f "tokens=2 delims=;" %%a in (locations.txt) do (
+	if !count!==0 set encrypted=%%a
+	if !count!==1 set decrypted=%%a
+	set /a count=count+1
+)
+cls
+echo Copying files to target directory...
+for %%a in (*.exe) do copy %%a !encrypted!>nul
+echo Successfully copied!
+cls
+cd !encrypted!
 for %%a in (*.ncch) do del "%%a" >nul
 for %%a in (*.3ds) do (
 	set CUTN=%%~na
+	echo Decrypting !CUTN!
 	if /i x!CUTN!==x!CUTN:decrypted=! (
 		echo | decrypt "%%a" >>log.txt 2>&1
 		set ARG=
@@ -21,11 +54,12 @@ for %%a in (*.3ds) do (
 			if %%f==!CUTN!.UpdateData.ncch set i=7
 			set ARG=!ARG! -i "%%f:!i!:!i!"
 		)
-		makerom -f cci -ignoresign -target p -o "!CUTN!-decrypted.3ds"!ARG! >>log.txt 2>&1
+		makerom -f cci -ignoresign -target p -o "!decrypted!\!CUTN!-decrypted.3ds"!ARG! >>log.txt 2>&1
 	)
 )
 for %%a in (*.cia) do (
 	set CUTN=%%~na
+	echo Decrypting !CUTN!
 	if /i x!CUTN!==x!CUTN:decrypted=! (
 		ctrtool -tmd "%%a" >content.txt
 		set FILE="content.txt"
@@ -38,7 +72,7 @@ for %%a in (*.cia) do (
 				set ARG=!ARG! -i "%%f:!i!:!i!"
 				set /a i+=1
 			)
-			makerom -f cia -ignoresign -target p -o "!CUTN!-decfirst.cia"!ARG! >>log.txt 2>&1
+			makerom -f cia -ignoresign -target p -o "!decrypted!\!CUTN!-decfirst.cia"!ARG! >>log.txt 2>&1
 		)
 		findstr /pr "^T.*D.*0004000E ^T.*D.*0004008C" !FILE! >nul
 		if not errorlevel 1 (
@@ -68,10 +102,36 @@ for %%a in (*-decfirst.cia) do (
 )
 for %%a in (*-decfirst.cia) do del "%%a" >nul
 for %%a in (*.ncch) do del "%%a" >nul
+for %%a in (*.exe) do del %%a
 cls
 echo Finished, please press any key to exit.
 pause >nul
 exit
+
+:NotExist
+echo If you're seeing this Then something went wrong. Try deleting locations.txt and try again.
+echo "this is var 1:" %1 REM Will either be Decrypt or Encrypt.
+echo "this is var 2:" %2 REM Will only be anything but blank if Var 1 is Decrypt and was an incorrect path.
+if %1==Decrypt if %2=="" (
+	echo decrytped=;!EncryptLocation!;>>locations.txt
+	goto :ScanLocations
+)
+echo Directory does not exist, please enter a valid directory!
+timeout >nul 1
+cls
+goto :Set%1
+
+:SlashChecker
+set PassThrough=%1
+set SlashCheck=!PassThrough:~-1!
+if "!SlashCheck!"=="/" goto :SlashTrue
+if "!SlashCheck!"=="\" goto :SlashTrue
+echo %2=;%1;>>locations.txt
+goto :eof
+:SlashTrue
+set PassThrough=!PassThrough:~0,-1!
+echo %2=;!PassThrough!;>>locations.txt
+goto :eof
 
 :EXF
 if !X! geq !i! (
@@ -91,4 +151,52 @@ exit/B
 set /a dec=0x%~1
 if [%~2] neq [] set %~2=%dec%
 exit/b
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 rem matif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
