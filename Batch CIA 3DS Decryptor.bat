@@ -76,7 +76,7 @@ for %%a in (*.cia) do (
 				set ARG=!ARG! -i "%%f:!i!:!i!"
 				set /a i+=1
 			)
-			makerom -f cia -ignoresign -target p -o "!decrypted!\!CUTN!-decfirst.cia"!ARG! >>log.txt 2>&1
+			makerom -f cia -ignoresign -target p -o "!CUTN!-decfirst.cia"!ARG! >>log.txt 2>&1
 		)
 		findstr /pr "^T.*D.*0004000E ^T.*D.*0004008C" !FILE! >nul
 		if not errorlevel 1 (
@@ -93,17 +93,19 @@ for %%a in (*.cia) do (
 				call :EXF
 			)
 			findstr /pr "^T.*D.*0004000E" !FILE! >nul
-			if not errorlevel 1 makerom -f cia -ignoresign -target p -o "!CUTN! (Patch)-decrypted.cia"!ARG! >>log.txt 2>&1
+			if not errorlevel 1 makerom -f cia -ignoresign -target p -o "!decrypted!\!CUTN! (Patch)-decrypted.cia"!ARG! >>log.txt 2>&1
 			findstr /pr "^T.*D.*0004008C" !FILE! >nul
-			if not errorlevel 1 makerom -f cia -dlc -ignoresign -target p -o "!CUTN! (DLC)-decrypted.cia"!ARG! >>log.txt 2>&1
+			if not errorlevel 1 makerom -f cia -dlc -ignoresign -target p -o "!decrypted!\!CUTN! (DLC)-decrypted.cia"!ARG! >>log.txt 2>&1
 		)
 	)
 )
 del content.txt >nul
 for %%a in (*-decfirst.cia) do (
 	set CUTN=%%~na
-	makerom -ciatocci "%%a" -o "!CUTN:-decfirst=-decrypted!.cci" >>log.txt 2>&1
+	echo !CUTN!
+	makerom -ciatocci "%%a" -o "!decrypted!\!CUTN:-decfirst=-decrypted!.cci" >>log.txt 2>&1
 )
+pause
 for %%a in (*-decfirst.cia) do del "%%a" >nul
 for %%a in (*.ncch) do del "%%a" >nul
 for %%a in (*.exe) do del %%a
